@@ -252,7 +252,7 @@ CS2024001, 8.7, 450, CSE, 2024
 
 ## 📧 Email Setup (Gmail)
 
-1. Enable 2-Factor Authentication on your Gmail
+1. Enable 2-Factor Authentication on your Gmail.
 2. Generate an App Password: Google Account → Security → App Passwords
 3. Use that App Password as `SMTP_PASS` in your `.env`
 
