@@ -19,7 +19,7 @@ export default function OpportunitiesPage() {
   const fetchOpps = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/opportunities', { params: { page, limit: LIMIT, search, status: 'active' } });
+      const res = await api.get('/api/opportunities', { params: { page, limit: LIMIT, search, status: 'active' } });
       setOpps(res.data.opportunities);
       setTotal(res.data.total);
     } catch {}
@@ -28,7 +28,7 @@ export default function OpportunitiesPage() {
 
   const fetchApplied = async () => {
     try {
-      const res = await api.get('/applications/my');
+      const res = await api.get('/api/applications/my');
       setAppliedIds(new Set(res.data.applications.filter(a => a.status !== 'withdrawn').map(a => a.opportunity?._id)));
     } catch {}
   };
@@ -41,7 +41,7 @@ export default function OpportunitiesPage() {
     if (appliedIds.has(opp._id)) return toast('Already applied!');
     setApplying(opp._id);
     try {
-      await api.post(`/applications/${opp._id}/apply`);
+      await api.post(`/api/applications/${opp._id}/apply`);
       toast.success(`Applied to ${opp.companyName}!`);
       setAppliedIds(prev => new Set([...prev, opp._id]));
     } catch (err) {
