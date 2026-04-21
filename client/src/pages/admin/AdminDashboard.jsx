@@ -27,7 +27,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/analytics')
+    api.get('/api/analytics')
       .then(res => setData(res.data))
       .catch(() => {})
       .finally(() => setLoading(false));
