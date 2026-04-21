@@ -9,7 +9,7 @@ export default function NotificationBell() {
 
   const fetchNotifs = async () => {
     try {
-      const res = await api.get('/notifications');
+      const res = await api.get('/api/notifications');
       setNotifs(res.data.notifications);
       setUnread(res.data.unreadCount);
     } catch {}
