@@ -16,7 +16,7 @@ export default function ChangePassword() {
     if (form.newPassword.length < 6) return toast.error('Password must be at least 6 characters.');
     setLoading(true);
     try {
-      await api.post('/auth/change-password', { currentPassword: form.currentPassword, newPassword: form.newPassword });
+      await api.post('/api/auth/change-password', { currentPassword: form.currentPassword, newPassword: form.newPassword });
       toast.success('Password changed successfully!');
       await refreshUser();
       navigate(user?.role === 'admin' ? '/admin' : '/student');
