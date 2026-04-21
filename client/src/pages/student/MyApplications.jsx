@@ -19,7 +19,7 @@ export default function MyApplications() {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/applications/my');
+      const res = await api.get('/api/applications/my');
       setApps(res.data.applications);
     } catch {}
     setLoading(false);
@@ -31,7 +31,7 @@ export default function MyApplications() {
     if (!window.confirm(`Withdraw application for ${company}?`)) return;
     setWithdrawing(id);
     try {
-      await api.delete(`/applications/${id}/withdraw`);
+      await api.delete(`/api/applications/${id}/withdraw`);
       toast.success('Application withdrawn.');
       fetch();
     } catch (err) {
