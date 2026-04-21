@@ -13,9 +13,9 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/applications/my'),
-      api.get('/opportunities', { params: { limit: 5, status: 'active' } }),
-      api.get('/announcements')
+      api.get('/api/applications/my'),
+      api.get('/api/opportunities', { params: { limit: 5, status: 'active' } }),
+      api.get('/api/announcements')
     ]).then(([a, o, n]) => {
       setApps(a.data.applications);
       setOpps(o.data.opportunities);
