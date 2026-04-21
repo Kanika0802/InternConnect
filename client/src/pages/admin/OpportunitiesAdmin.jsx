@@ -31,7 +31,7 @@ export default function OpportunitiesAdmin() {
   const fetchOpps = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/opportunities', { params: { limit: 50 } });
+      const res = await api.get('/api/opportunities', { params: { limit: 50 } });
       setOpps(res.data.opportunities);
       setTotal(res.data.total);
     } catch {}
@@ -65,10 +65,10 @@ export default function OpportunitiesAdmin() {
     };
     try {
       if (selected) {
-        await api.put(`/opportunities/${selected._id}`, payload);
+        await api.put(`/api/opportunities/${selected._id}`, payload);
         toast.success('Opportunity updated.');
       } else {
-        const res = await api.post('/opportunities', payload);
+        const res = await api.post('/api/opportunities', payload);
         toast.success(`Opportunity posted. ${res.data.notified} students notified.`);
       }
       setModal(null);
@@ -78,7 +78,7 @@ export default function OpportunitiesAdmin() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this opportunity?')) return;
-    await api.delete(`/opportunities/${id}`);
+    await api.delete(`/api/opportunities/${id}`);
     toast.success('Deleted.');
     fetchOpps();
   };
