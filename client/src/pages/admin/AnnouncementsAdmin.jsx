@@ -8,7 +8,7 @@ export function AnnouncementsAdmin() {
   const [loading, setLoading] = useState(false);
 
   const fetch = async () => {
-    const res = await api.get('/announcements');
+    const res = await api.get('/api/announcements');
     setAnns(res.data.announcements);
   };
 
@@ -18,7 +18,7 @@ export function AnnouncementsAdmin() {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/announcements', form);
+      await api.post('/api/announcements', form);
       toast.success('Announcement posted.');
       setForm({ title:'', content:'', type:'general', expiresAt:'' });
       fetch();
@@ -27,7 +27,7 @@ export function AnnouncementsAdmin() {
   };
 
   const handleDelete = async (id) => {
-    await api.delete(`/announcements/${id}`);
+    await api.delete(`/api/announcements/${id}`);
     toast.success('Removed.');
     fetch();
   };
