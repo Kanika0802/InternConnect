@@ -41,7 +41,7 @@ export default function StudentsPage() {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/students', { params: { page, limit: LIMIT, search } });
+      const res = await api.get('/api/students', { params: { page, limit: LIMIT, search } });
       setStudents(res.data.students);
       setTotal(res.data.total);
     } catch { toast.error('Failed to load students.'); }
@@ -57,10 +57,10 @@ export default function StudentsPage() {
     e.preventDefault();
     try {
       if (modal === 'create') {
-        const res = await api.post('/students', form);
+        const res = await api.post('/api/students', form);
         toast.success(`Student created. Temp password: ${res.data.temporaryPassword}`);
       } else {
-        await api.put(`/students/${selected._id}`, form);
+        await api.put(`/api/students/${selected._id}`, form);
         toast.success('Student updated.');
       }
       setModal(null);
@@ -71,7 +71,7 @@ export default function StudentsPage() {
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Delete ${name}? This cannot be undone.`)) return;
     try {
-      await api.delete(`/students/${id}`);
+      await api.delete(`/api/students/${id}`);
       toast.success('Student deleted.');
       fetchStudents();
     } catch { toast.error('Failed to delete.'); }
@@ -80,7 +80,7 @@ export default function StudentsPage() {
   const handleResetPassword = async (id, name) => {
     if (!window.confirm(`Reset password for ${name}?`)) return;
     try {
-      const res = await api.post(`/students/${id}/reset-password`);
+      const res = await api.post(`/api/students/${id}/reset-password`);
       toast.success(`Password reset. New temp password: ${res.data.temporaryPassword}`);
     } catch { toast.error('Failed to reset password.'); }
   };
@@ -93,7 +93,7 @@ export default function StudentsPage() {
     setUploading(true);
     setBulkResult(null);
     try {
-      const res = await api.post(`/students/bulk/${mode}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await api.post(`/api/students/bulk/${mode}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setBulkResult(res.data);
       toast.success(`Done! ${mode === 'create' ? res.data.summary.created : res.data.summary.updated} records processed.`);
       fetchStudents();
