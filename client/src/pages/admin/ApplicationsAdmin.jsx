@@ -32,7 +32,7 @@ export default function ApplicationsAdmin() {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/applications', { params: { page, limit: LIMIT, status: filter || undefined, opportunityId: opportunityFilter || undefined } });
+      const res = await api.get('/api/applications', { params: { page, limit: LIMIT, status: filter || undefined, opportunityId: opportunityFilter || undefined } });
       setApps(res.data.applications);
       setTotal(res.data.total);
     } catch {}
@@ -41,7 +41,7 @@ export default function ApplicationsAdmin() {
 
   const fetchOpps = async () => {
     try {
-      const res = await api.get('/opportunities', { params: { limit: 100 } });
+      const res = await api.get('/api/opportunities', { params: { limit: 100 } });
       setOppsList(res.data.opportunities);
     } catch {}
   };
@@ -50,7 +50,7 @@ export default function ApplicationsAdmin() {
 
   const updateStatus = async (id, status) => {
     try {
-      await api.patch(`/applications/${id}/status`, { status });
+      await api.patch(`/api/applications/${id}/status`, { status });
       toast.success(`Status updated to ${status}.`);
       fetch();
     } catch { toast.error('Failed to update status.'); }
@@ -65,7 +65,7 @@ export default function ApplicationsAdmin() {
     fd.append('file', bulkForm.file);
 
     try {
-      const res = await api.post('/applications/bulk-update-results', fd);
+      const res = await api.post('/api/applications/bulk-update-results', fd);
       setBulkResult(res.data);
       fetch();
       bulkForm.file = null;
