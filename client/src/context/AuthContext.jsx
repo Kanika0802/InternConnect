@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = useCallback(async (studentId, password) => {
-    const res = await api.post('/auth/login', { studentId, password });
+    const res = await api.post('/api/auth/login', { studentId, password });
     const { token, user, requiresPasswordChange } = res.data;
     localStorage.setItem('ic_token', token);
     localStorage.setItem('ic_user', JSON.stringify(user));
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    const res = await api.get('/auth/me');
+    const res = await api.get('/api/auth/me');
     setUser(res.data.user);
     localStorage.setItem('ic_user', JSON.stringify(res.data.user));
     return res.data.user;
