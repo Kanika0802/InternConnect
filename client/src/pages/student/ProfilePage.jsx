@@ -17,7 +17,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.put('/students/me/profile', form);
+      await api.put('/api/students/me/profile', form);
       await refreshUser();
       toast.success('Profile updated.');
       setEditMode(false);
@@ -34,7 +34,7 @@ export default function ProfilePage() {
     if (passForm.newPassword.length < 6) return toast.error('Password must be at least 6 characters.');
     setChangingPass(true);
     try {
-      await api.post('/auth/change-password', { currentPassword: passForm.currentPassword, newPassword: passForm.newPassword });
+      await api.post('/api/auth/change-password', { currentPassword: passForm.currentPassword, newPassword: passForm.newPassword });
       toast.success('Password changed successfully!');
       setPassForm({ currentPassword:'', newPassword:'', confirmPassword:'' });
     } catch (err) {
@@ -53,7 +53,7 @@ export default function ProfilePage() {
     fd.append('resume', file);
     setUploadingResume(true);
     try {
-      await api.post('/students/me/resume', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.post('/api/students/me/resume', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       await refreshUser();
       toast.success('Resume uploaded!');
     } catch {
