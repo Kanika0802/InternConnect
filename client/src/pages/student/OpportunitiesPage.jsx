@@ -5,11 +5,11 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function OpportunitiesPage() {
   const { user } = useAuth();
-  const [opps, setOpps]       = useState([]);
-  const [total, setTotal]     = useState(0);
-  const [page, setPage]       = useState(1);
-  const [search, setSearch]   = useState('');
-  const [filter, setFilter]   = useState('all'); // 'all' | 'eligible' | 'ineligible'
+  const [opps, setOpps] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all' | 'eligible' | 'ineligible'
   const [applying, setApplying] = useState(null);
   const [appliedIds, setAppliedIds] = useState(new Set());
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ export default function OpportunitiesPage() {
       const res = await api.get('/api/opportunities', { params: { page, limit: LIMIT, search, status: 'active' } });
       setOpps(res.data.opportunities);
       setTotal(res.data.total);
-    } catch {}
+    } catch { }
     setLoading(false);
   };
 
@@ -30,7 +30,7 @@ export default function OpportunitiesPage() {
     try {
       const res = await api.get('/api/applications/my');
       setAppliedIds(new Set(res.data.applications.filter(a => a.status !== 'withdrawn').map(a => a.opportunity?._id)));
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => { fetchOpps(); }, [page, search]);
@@ -57,12 +57,118 @@ export default function OpportunitiesPage() {
     return true;
   });
 
+  const now = new Date();
+  const liveOpps = filtered.filter(o => !o.applicationDeadline || new Date(o.applicationDeadline) > now);
+  const expiredOpps = filtered.filter(o => o.applicationDeadline && new Date(o.applicationDeadline) <= now);
+
   const pages = Math.ceil(total / LIMIT);
 
   const jobTypeColors = {
     placement: 'bg-violet-100 text-violet-700',
     internship: 'bg-amber-100 text-amber-700',
     both: 'bg-teal-100 text-teal-700'
+  };
+
+  const renderOppCard = (o, isExpired) => {
+    const applied = appliedIds.has(o._id);
+    const isExpanded = expanded === o._id;
+    return (
+      <div key={o._id} className={`card p-5 flex flex-col transition-all ${isExpired ? 'opacity-70 bg-gray-50' : o.eligible ? 'border-green-200' : 'opacity-80'}`}>
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-3">
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${isExpired ? 'bg-gray-200 text-gray-500' : o.eligible ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+              {o.companyName[0]}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900 leading-tight">{o.companyName}</div>
+              <div className="text-sm text-gray-500">{o.role}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`badge flex-shrink-0 ${isExpired ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+              {isExpired ? '🔴 Expired' : '🟢 Live'}
+            </span>
+            <span className={`badge flex-shrink-0 ${jobTypeColors[o.jobType]}`}>{o.jobType}</span>
+          </div>
+        </div>
+
+        {/* Eligibility banner */}
+        {!isExpired && (o.eligible ? (
+          <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2 mb-3">
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+            You are eligible to apply
+          </div>
+        ) : (
+          <div className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-3 space-y-0.5">
+            {o.ineligibilityReasons.map((r, i) => <div key={i}>✗ {r}</div>)}
+          </div>
+        ))}
+
+        {/* Details */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
+          {o.location && <span>📍 {o.location}</span>}
+          {o.salary && <span>💰 {o.salary}</span>}
+          {o.applicationDeadline && <span>⏰ {new Date(o.applicationDeadline).toLocaleDateString()}</span>}
+        </div>
+
+        {/* Eligibility criteria */}
+        <div className="bg-gray-50 rounded-lg px-3 py-2 text-xs text-gray-600 mb-3 space-y-0.5">
+          <div className="flex gap-3">
+            <span>Min CGPA: <strong>{o.eligibility?.minCGPA || 0}</strong></span>
+            {o.eligibility?.minAMCAT > 0 && <span>AMCAT: <strong>{o.eligibility.minAMCAT}</strong></span>}
+          </div>
+          {o.eligibility?.departments?.length > 0 && (
+            <div>Depts: {o.eligibility.departments.join(', ')}</div>
+          )}
+        </div>
+
+        {/* Description toggle */}
+        <button onClick={() => setExpanded(isExpanded ? null : o._id)}
+          className="text-xs text-primary-600 hover:text-primary-700 text-left mb-3">
+          {isExpanded ? '▲ Hide description' : '▼ Show description'}
+        </button>
+        {isExpanded && (
+          <div className="text-xs text-gray-600 bg-gray-50 rounded-lg p-3 mb-3 leading-relaxed whitespace-pre-wrap">
+            {o.description}
+          </div>
+        )}
+
+        {/* Apply button */}
+        <div className="mt-auto">
+          {isExpired ? (
+            <button disabled className="w-full py-2 text-sm font-medium rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed">
+              Applications Closed
+            </button>
+          ) : applied ? (
+            <div className="w-full py-2 text-center text-sm font-medium text-green-700 bg-green-50 rounded-lg border border-green-200">
+              ✓ Applied
+            </div>
+          ) : !user?.resume ? (
+            <div className="relative group w-full">
+              <button
+                disabled
+                className="w-full py-2 text-sm font-medium rounded-lg transition-colors bg-gray-100 text-gray-400 cursor-not-allowed">
+                Apply Now
+              </button>
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-max max-w-xs bg-gray-800 text-white text-xs rounded py-1 px-2">
+                Please upload your resume before applying
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => handleApply(o)}
+              disabled={!o.eligible || applying === o._id}
+              className={`w-full py-2 text-sm font-medium rounded-lg transition-colors ${o.eligible
+                  ? 'bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}>
+              {applying === o._id ? 'Applying…' : o.eligible ? 'Apply Now' : 'Not Eligible'}
+            </button>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -82,7 +188,7 @@ export default function OpportunitiesPage() {
             value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
         </div>
         <div className="flex rounded-lg border border-gray-300 overflow-hidden">
-          {[['all','All'],['eligible','Eligible'],['ineligible','Not Eligible']].map(([val, label]) => (
+          {[['all', 'All'], ['eligible', 'Eligible'], ['ineligible', 'Not Eligible']].map(([val, label]) => (
             <button key={val} onClick={() => setFilter(val)}
               className={`px-4 py-2 text-sm font-medium transition-colors ${filter === val ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
               {label}
@@ -92,113 +198,43 @@ export default function OpportunitiesPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full"/></div>
+        <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" /></div>
       ) : filtered.length === 0 ? (
         <div className="card p-16 text-center text-gray-400">No opportunities found.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map(o => {
-            const applied = appliedIds.has(o._id);
-            const isExpanded = expanded === o._id;
-            return (
-              <div key={o._id} className={`card p-5 flex flex-col transition-all ${o.eligible ? 'border-green-200' : 'opacity-80'}`}>
-                {/* Header */}
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${o.eligible ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {o.companyName[0]}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900 leading-tight">{o.companyName}</div>
-                      <div className="text-sm text-gray-500">{o.role}</div>
-                    </div>
-                  </div>
-                  <span className={`badge flex-shrink-0 ${jobTypeColors[o.jobType]}`}>{o.jobType}</span>
-                </div>
-
-                {/* Eligibility banner */}
-                {o.eligible ? (
-                  <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2 mb-3">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                    You are eligible to apply
-                  </div>
-                ) : (
-                  <div className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-3 space-y-0.5">
-                    {o.ineligibilityReasons.map((r, i) => <div key={i}>✗ {r}</div>)}
-                  </div>
-                )}
-
-                {/* Details */}
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
-                  {o.location && <span>📍 {o.location}</span>}
-                  {o.salary && <span>💰 {o.salary}</span>}
-                  {o.applicationDeadline && <span>⏰ {new Date(o.applicationDeadline).toLocaleDateString()}</span>}
-                </div>
-
-                {/* Eligibility criteria */}
-                <div className="bg-gray-50 rounded-lg px-3 py-2 text-xs text-gray-600 mb-3 space-y-0.5">
-                  <div className="flex gap-3">
-                    <span>Min CGPA: <strong>{o.eligibility?.minCGPA || 0}</strong></span>
-                    {o.eligibility?.minAMCAT > 0 && <span>AMCAT: <strong>{o.eligibility.minAMCAT}</strong></span>}
-                  </div>
-                  {o.eligibility?.departments?.length > 0 && (
-                    <div>Depts: {o.eligibility.departments.join(', ')}</div>
-                  )}
-                </div>
-
-                {/* Description toggle */}
-                <button onClick={() => setExpanded(isExpanded ? null : o._id)}
-                  className="text-xs text-primary-600 hover:text-primary-700 text-left mb-3">
-                  {isExpanded ? '▲ Hide description' : '▼ Show description'}
-                </button>
-                {isExpanded && (
-                  <div className="text-xs text-gray-600 bg-gray-50 rounded-lg p-3 mb-3 leading-relaxed whitespace-pre-wrap">
-                    {o.description}
-                  </div>
-                )}
-
-                {/* Apply button */}
-                <div className="mt-auto">
-                  {applied ? (
-                    <div className="w-full py-2 text-center text-sm font-medium text-green-700 bg-green-50 rounded-lg border border-green-200">
-                      ✓ Applied
-                    </div>
-                  ) : !user?.resume ? (
-                    <div className="relative group w-full">
-                      <button
-                        disabled
-                        className="w-full py-2 text-sm font-medium rounded-lg transition-colors bg-gray-100 text-gray-400 cursor-not-allowed">
-                        Apply Now
-                      </button>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-max max-w-xs bg-gray-800 text-white text-xs rounded py-1 px-2">
-                        Please upload your resume before applying
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleApply(o)}
-                      disabled={!o.eligible || applying === o._id}
-                      className={`w-full py-2 text-sm font-medium rounded-lg transition-colors ${
-                        o.eligible
-                          ? 'bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}>
-                      {applying === o._id ? 'Applying…' : o.eligible ? 'Apply Now' : 'Not Eligible'}
-                    </button>
-                  )}
-                </div>
+        <div className="space-y-10">
+          {liveOpps.length > 0 && (
+            <section>
+              <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                Live Opportunities
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {liveOpps.map(o => renderOppCard(o, false))}
               </div>
-            );
-          })}
+            </section>
+          )}
+
+          {expiredOpps.length > 0 && (
+            <section>
+              <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                Expired Opportunities
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {expiredOpps.map(o => renderOppCard(o, true))}
+              </div>
+            </section>
+          )}
         </div>
       )}
 
       {/* Pagination */}
       {pages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
-          <button disabled={page===1} onClick={() => setPage(p=>p-1)} className="btn-secondary text-sm disabled:opacity-40">← Prev</button>
+          <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="btn-secondary text-sm disabled:opacity-40">← Prev</button>
           <span className="text-sm text-gray-500 px-3">{page} / {pages}</span>
-          <button disabled={page===pages} onClick={() => setPage(p=>p+1)} className="btn-secondary text-sm disabled:opacity-40">Next →</button>
+          <button disabled={page === pages} onClick={() => setPage(p => p + 1)} className="btn-secondary text-sm disabled:opacity-40">Next →</button>
         </div>
       )}
     </div>

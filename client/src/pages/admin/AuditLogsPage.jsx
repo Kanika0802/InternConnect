@@ -1,1 +1,1 @@
-export { AuditLogsPage as default } from './api/AnnouncementsAdmin';
+export { AuditLogsPage as default } from './AnnouncementsAdmin';

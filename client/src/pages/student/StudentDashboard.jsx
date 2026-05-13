@@ -55,7 +55,7 @@ export default function StudentDashboard() {
           { label: 'Total Applied', value: apps.length, color: 'from-blue-500 to-indigo-600', icon: Send },
           { label: 'Shortlisted', value: apps.filter(a=>a.status==='shortlisted').length, color: 'from-emerald-400 to-teal-500', icon: CheckCircle },
           { label: 'Selected', value: apps.filter(a=>a.status==='selected').length, color: 'from-violet-500 to-purple-600', icon: Trophy },
-          { label: 'Eligible Jobs', value: opps.filter(o=>o.eligible && !apps.some(a=>a.opportunity?._id === o._id)).length, color: 'from-amber-400 to-orange-500', icon: Briefcase },
+          { label: 'Eligible Jobs', value: opps.filter(o=>o.eligible && (!o.applicationDeadline || new Date(o.applicationDeadline) > new Date()) && !apps.some(a=>a.opportunity?._id === o._id)).length, color: 'from-amber-400 to-orange-500', icon: Briefcase },
         ].map(s => {
           const Icon = s.icon;
           return (
@@ -126,14 +126,14 @@ export default function StudentDashboard() {
       </div>
 
       {/* Eligible opportunities preview */}
-      {opps.filter(o=>o.eligible && !apps.some(a=>a.opportunity?._id === o._id)).length > 0 && (
+      {opps.filter(o=>o.eligible && (!o.applicationDeadline || new Date(o.applicationDeadline) > new Date()) && !apps.some(a=>a.opportunity?._id === o._id)).length > 0 && (
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">🎯 Eligible Opportunities</h2>
             <Link to="/student/opportunities" className="text-sm text-primary-600 hover:text-primary-700 font-medium">Browse all →</Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {opps.filter(o=>o.eligible && !apps.some(a=>a.opportunity?._id === o._id)).slice(0, 4).map(o => (
+            {opps.filter(o=>o.eligible && (!o.applicationDeadline || new Date(o.applicationDeadline) > new Date()) && !apps.some(a=>a.opportunity?._id === o._id)).slice(0, 4).map(o => (
               <div key={o._id} className="flex items-center gap-3 p-3 rounded-xl border border-green-100 bg-green-50">
                 <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-green-200 text-sm font-bold text-green-700 flex-shrink-0">
                   {o.companyName[0]}
